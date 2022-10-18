@@ -2,18 +2,13 @@ use std::env;
 extern crate dotenv;
 use dotenv::dotenv;
 use mongodb::{
-    bson::{
-        doc,
-        oid::{self, ObjectId},
-    },
+    bson::{doc, oid::ObjectId},
     error::Error,
     results::{DeleteResult, InsertOneResult, UpdateResult},
     sync::{Client, Collection},
 };
 
-use crate::domain::user_model::User;
-
-use super::DbError;
+use crate::domain::{custom_error::CustomError, user_model::User};
 
 pub struct MongoRepo {
     col: Collection<User>,
@@ -33,7 +28,7 @@ impl MongoRepo {
         Ok(MongoRepo { col })
     }
 
-    pub fn create_user(&self, new_user: User) -> Result<InsertOneResult, DbError> {
+    pub fn create_user(&self, new_user: User) -> Result<InsertOneResult, CustomError> {
         let new_doc = User {
             id: None,
             name: new_user.name,
@@ -44,14 +39,14 @@ impl MongoRepo {
         self.col.insert_one(new_doc, None).map_err(|err| err.into())
     }
 
-    pub fn get_user(&self, id: &str) -> Result<User, DbError> {
+    pub fn get_user(&self, id: &str) -> Result<User, CustomError> {
         let obj_id = ObjectId::parse_str(id)?;
         let filter = doc! {"_id": obj_id};
         let user = self.col.find_one(filter, None)?;
-        user.ok_or(DbError::NotFound)
+        user.ok_or(CustomError::NotFound)
     }
 
-    pub fn update_user(&self, id: &str, new_user: User) -> Result<UpdateResult, DbError> {
+    pub fn update_user(&self, id: &str, new_user: User) -> Result<UpdateResult, CustomError> {
         let obj_id = ObjectId::parse_str(id)?;
         let filter = doc! {"_id": obj_id};
         let new_doc = doc! {
@@ -67,14 +62,14 @@ impl MongoRepo {
             .map_err(|err| err.into())
     }
 
-    pub fn delete_user(&self, id: &str) -> Result<DeleteResult, DbError> {
+    pub fn delete_user(&self, id: &str) -> Result<DeleteResult, CustomError> {
         let obj_id = ObjectId::parse_str(id)?;
         let filter = doc! {"_id": obj_id};
         let user_detail = self.col.delete_one(filter, None)?;
         Ok(user_detail)
     }
 
-    pub fn get_all_users(&self) -> Result<Vec<User>, DbError> {
+    pub fn get_all_users(&self) -> Result<Vec<User>, CustomError> {
         let cursor = self.col.find(None, None)?;
         cursor
             .map(|it| it.map_err(|err| err.into()))
@@ -83,14 +78,8 @@ impl MongoRepo {
     }
 }
 
-impl From<Error> for DbError {
+impl From<Error> for CustomError {
     fn from(err: Error) -> Self {
-        DbError::InternalError(err)
-    }
-}
-
-impl From<oid::Error> for DbError {
-    fn from(_: oid::Error) -> Self {
-        DbError::IdParseError
+        CustomError::DbError(err)
     }
 }
