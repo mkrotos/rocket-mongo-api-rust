@@ -7,7 +7,7 @@ use mongodb::{
         oid::{self, ObjectId},
     },
     error::Error,
-    results::{InsertOneResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
     sync::{Client, Collection},
 };
 
@@ -65,6 +65,21 @@ impl MongoRepo {
         self.col
             .update_one(filter, new_doc, None)
             .map_err(|err| err.into())
+    }
+
+    pub fn delete_user(&self, id: &str) -> Result<DeleteResult, DbError> {
+        let obj_id = ObjectId::parse_str(id)?;
+        let filter = doc! {"_id": obj_id};
+        let user_detail = self.col.delete_one(filter, None)?;
+        Ok(user_detail)
+    }
+
+    pub fn get_all_users(&self) -> Result<Vec<User>, DbError> {
+        let cursor = self.col.find(None, None)?;
+        cursor
+            .map(|it| it.map_err(|err| err.into()))
+            .into_iter()
+            .collect()
     }
 }
 

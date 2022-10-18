@@ -49,3 +49,23 @@ pub fn update_user(
     let updated_user = db.get_user(&id)?;
     Ok(Json(updated_user))
 }
+
+#[delete("/user/<id>")]
+pub fn delete_user(db: &State<MongoRepo>, id: String) -> Result<Json<&str>, Status> {
+    if id.is_empty() {
+        return Err(Status::BadRequest);
+    };
+    let result = db.delete_user(&id)?;
+    if result.deleted_count == 1 {
+        Ok(Json("User successfully deleted"))
+    } else {
+        Err(Status::NotFound)
+    }
+}
+
+#[get("/users")]
+pub fn get_all_users(db: &State<MongoRepo>) -> Result<Json<Vec<User>>, Status> {
+    db.get_all_users()
+        .map(|user| Json(user))
+        .map_err(|err| err.into())
+}
