@@ -1,6 +1,4 @@
-use std::env;
 extern crate dotenv;
-use dotenv::dotenv;
 use mongodb::{
     bson::{doc, oid::ObjectId},
     error::Error,
@@ -15,9 +13,7 @@ pub struct MongoRepo {
 }
 
 impl MongoRepo {
-    pub fn init() -> Result<Self, Error> {
-        dotenv().ok();
-        let uri = env::var("MONGOURI").expect("Mongo connection string have NOT been set");
+    pub fn init(uri: String) -> Result<Self, Error> {
         let client = Client::with_uri_str(uri)?;
         let db = client.database("RustDB");
         db.run_command(doc! {"ping": 1}, None)?;

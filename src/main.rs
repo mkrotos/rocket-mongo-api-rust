@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate rocket;
-use api::user_api::{create_user, get_user, update_user, delete_user, get_all_users};
-use repository::mongo_repo::MongoRepo;
+use api::user_api::{create_user, delete_user, get_all_users, get_user, update_user};
+use repository::RepoAdapter;
 use rocket::{get, http::Status, serde::json::Json};
 
 mod api;
@@ -15,7 +15,7 @@ fn hello() -> Result<Json<String>, Status> {
 
 #[launch]
 fn rocket() -> _ {
-    let db = MongoRepo::init().expect("Failed to connect to mongo db");
+    let db = RepoAdapter::init();
     rocket::build()
         .manage(db)
         .mount("/", routes![hello])
