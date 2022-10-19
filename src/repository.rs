@@ -5,7 +5,7 @@ use dotenv::dotenv;
 use mongodb::results::InsertOneResult;
 use std::env;
 
-pub mod mongo_repo;
+mod mongo_repo;
 
 pub struct RepoAdapter {
     repo: MongoRepo,
