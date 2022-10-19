@@ -10,7 +10,7 @@ pub fn create_user(
     db: &State<MongoRepo>,
     new_user: Json<UserDto>,
 ) -> Result<Json<InsertOneResult>, Status> {
-    let user = db.create_user(new_user.into_inner().into_new_user()?)?;
+    let user = db.create_user(new_user.into_inner().into_new_user())?;
     Ok(Json(user))
 }
 
